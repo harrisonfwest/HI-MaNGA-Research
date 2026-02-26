@@ -26,7 +26,7 @@ function profile_asymmetry,velocity,flux,v0,vlow,vhigh,rms=rms,plot=plot,inspect
      asym=alog10(flow/fhigh)
      easym=1/alog(10)*eratio/ratio
 
-;show plot if keyword is set
+   ;show plot if keyword is set
      if n_elements(plot) gt 0 then begin
         plot,velocity,flux,xtitle='velocity',ytitle='flux density [Jy]',/xsty,/ysty,xrange=[v0-1000,v0+1000]
         oplot,velocity,flux,psym=4,symsize=0.5
@@ -99,7 +99,7 @@ function find_edges,velocity,flux,v0,rms=rms,threshold=threshold,maxcount=maxcou
   ;do quick meausre of rms
   if n_elements(rms) eq 0 then begin
      sel=where((velocity lt (v0 - 300)) or (velocity gt (v0 + 300)))
-;     rms = robust_sigma(flux[sel])
+ ;     rms = robust_sigma(flux[sel])
      rms = median(abs(flux[sel] - median(flux)))/0.67
      print,'calculated rms: ',rms
   endif
