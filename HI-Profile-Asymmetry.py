@@ -44,6 +44,6 @@ def profile_asymmetry(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
     # Low velocity side integrated flux centered at VOPT
     lo_flux_OPT = trapz(subtracted_flux[lo_sel_OPT], velocity[lo_sel_OPT])
     # High velocity side integrated flux centered at VOPT 
-    hi_flux_OPT = trapz(subtracted_flux[lo_sel_HI], velocity[lo_sel_HI])
+    hi_flux_OPT = trapz(subtracted_flux[hi_sel_OPT], velocity[hi_sel_OPT])
     
     return np.array([plateIFU, VHI, VOPT, width, lo_flux_HI, hi_flux_HI, lo_flux_OPT, hi_flux_OPT])
