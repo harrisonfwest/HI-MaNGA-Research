@@ -3,8 +3,9 @@ import numpy as np
 from numpy.typing import ArrayLike
 import matplotlib.pyplot as plt
 from astropy.io import fits
+from scipy.integrate import trapz
 
-def profile_asymmetry(velocity: ArrayLike, flux: ArrayLike, VHI: float, VOPT: float, width: float | ArrayLike, plot: bool = False) -> ArrayLike:
+def profile_asymmetry(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: float, VOPT: float, width: float | ArrayLike, plot: bool = False) -> ArrayLike:
     """
     Function to calculate asymmetry parameters of global gas profile
 
@@ -19,7 +20,30 @@ def profile_asymmetry(velocity: ArrayLike, flux: ArrayLike, VHI: float, VOPT: fl
     Returns:
         ArrayLike: List of parameters passed into function call, as well as integrated fluxes for each of left (low velocity) and right (high velocity) sides of the galaxy for each of the provided central velocities. Asymmetry itself is not directly calculated to allow for flexibility in subsequent analysis
     """
-    v0 = np.array([VHI, VOPT])
-    low_int_flux = -999 # Low velocity side integrated flux
-    hi_int_flux = -999 # High velocity side integrated flux
     
+    # Calculate rms to subtract from flux
+    mean_v0 = (VHI + VOPT)/2
+    rms_sel = np.argwhere(abs(velocity - v0) >= width)[20:-20] # Trim first and last 20 velocities of baseline to remove noise
+    rms = np.sqrt(np.mean(flux[rms_sel]**2))
+    subtracted_flux = flux - rms
+    
+    lo_sel_HI = np.argwhere((velocity > (VHI - width)) & (velocity < VHI))
+    hi_sel_HI = np.argwhere((velocity < (VHI - width)) & (velocity > VHI))
+    
+    lo_sel_OPT = np.argwhere((velocity > (VOPT - width)) & (velocity < VOPT))
+    hi_sel_OPT = np.argwhere((velocity < (VOPT - width)) & (velocity > VOPT))
+    
+    
+    # We will integrate using the Trapezoidal rule, found in scipy.integrate.trapz
+    
+    # Low velocity side integrated flux centered at VHI
+    lo_flux_HI = trapz(subtracted_flux[lo_sel_HI], velocity[lo_sel_HI])
+    # High velocity side integrated flux centered at VHI
+    hi_flux_HI = trapz(subtracted_flux[hi_sel_HI], velocity[hi_sel_HI])
+    
+    # Low velocity side integrated flux centered at VOPT
+    lo_flux_OPT = trapz(subtracted_flux[lo_sel_OPT], velocity[lo_sel_OPT])
+    # High velocity side integrated flux centered at VOPT 
+    hi_flux_OPT = trapz(subtracted_flux[lo_sel_HI], velocity[lo_sel_HI])
+    
+    return np.array([plateIFU, VHI, VOPT, width, lo_flux_HI, hi_flux_HI, lo_flux_OPT, hi_flux_OPT])
