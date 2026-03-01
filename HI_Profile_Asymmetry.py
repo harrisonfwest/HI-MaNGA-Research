@@ -47,7 +47,7 @@ def profile_asymmetry(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
     hi_flux_OPT = trapz(subtracted_flux[hi_sel_OPT], velocity[hi_sel_OPT])
     
     if plot == True:
-        plt.figure(figsize= (12, 10))
+        plt.figure(figsize= (10, 8))
         plt.plot(velocity, subtracted_flux, color = 'black')
         
         plt.axvline(VHI - width, lw = 2, color = 'tab:red', label = 'VHI-based width')
