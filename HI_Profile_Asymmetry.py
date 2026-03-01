@@ -23,7 +23,7 @@ def profile_asymmetry(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
     
     # Calculate rms to subtract from flux
     mean_v0 = (VHI + VOPT)/2
-    rms_sel = np.argwhere(abs(velocity - v0) >= width)[20:-20] # Trim first and last 20 velocities of baseline to remove noise
+    rms_sel = np.argwhere(abs(velocity - mean_v0) >= width)[20:-20] # Trim first and last 20 velocities of baseline to remove noise
     rms = np.sqrt(np.mean(flux[rms_sel]**2))
     subtracted_flux = flux - rms
     
