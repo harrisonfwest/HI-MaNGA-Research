@@ -3,7 +3,8 @@ import numpy as np
 from numpy.typing import ArrayLike
 import matplotlib.pyplot as plt
 from astropy.io import fits
-from scipy.integrate import trapz
+from scipy.integrate import trapezoid
+from astropy.io import fits
 
 def profile_asymmetry(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: float, VOPT: float, width: float | ArrayLike, plot: bool = False) -> ArrayLike:
     """
@@ -28,23 +29,26 @@ def profile_asymmetry(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
     subtracted_flux = flux - rms
     
     lo_sel_HI = np.argwhere((velocity > (VHI - width)) & (velocity < VHI))
+    lo_sel_HI = lo_sel_HI.reshape(len(lo_sel_HI))
     hi_sel_HI = np.argwhere((velocity < (VHI - width)) & (velocity > VHI))
-    
+    hi_sel_HI = hi_sel_HI.reshape(len(hi_sel_HI))
+
     lo_sel_OPT = np.argwhere((velocity > (VOPT - width)) & (velocity < VOPT))
+    lo_sel_OPT = lo_sel_OPT.reshape(len(lo_sel_OPT))
     hi_sel_OPT = np.argwhere((velocity < (VOPT - width)) & (velocity > VOPT))
+    hi_sel_OPT = hi_sel_OPT.reshape(len(hi_sel_OPT))
     
-    
-    # We will integrate using the Trapezoidal rule, found in scipy.integrate.trapz
+    # We will integrate using the Trapezoidal rule, found in scipy.integrate.trapezoid
     
     # Low velocity side integrated flux centered at VHI
-    lo_flux_HI = trapz(subtracted_flux[lo_sel_HI], velocity[lo_sel_HI])
+    lo_flux_HI = trapezoid(subtracted_flux[lo_sel_HI], velocity[lo_sel_HI])
     # High velocity side integrated flux centered at VHI
-    hi_flux_HI = trapz(subtracted_flux[hi_sel_HI], velocity[hi_sel_HI])
+    hi_flux_HI = trapezoid(subtracted_flux[hi_sel_HI], velocity[hi_sel_HI])
     
     # Low velocity side integrated flux centered at VOPT
-    lo_flux_OPT = trapz(subtracted_flux[lo_sel_OPT], velocity[lo_sel_OPT])
+    lo_flux_OPT = trapezoid(subtracted_flux[lo_sel_OPT], velocity[lo_sel_OPT])
     # High velocity side integrated flux centered at VOPT 
-    hi_flux_OPT = trapz(subtracted_flux[hi_sel_OPT], velocity[hi_sel_OPT])
+    hi_flux_OPT = trapezoid(subtracted_flux[hi_sel_OPT], velocity[hi_sel_OPT])
     
     if plot == True:
         plt.figure(figsize= (10, 8))
@@ -64,5 +68,5 @@ def profile_asymmetry(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         plt.ylabel('Flux')
         
         plt.show()
-        
+
     return np.array([plateIFU, VHI, VOPT, width, lo_flux_HI, hi_flux_HI, lo_flux_OPT, hi_flux_OPT])
