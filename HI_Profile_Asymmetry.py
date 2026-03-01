@@ -6,7 +6,7 @@ from astropy.io import fits
 from scipy.integrate import trapezoid
 from astropy.io import fits
 
-def profile_asymmetry(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: float, VOPT: float, width: float | ArrayLike, plot: bool = False) -> ArrayLike:
+def profile_asymmetry(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: float, VOPT: float, width: float, plot: bool = False) -> ArrayLike:
     """
     Function to calculate asymmetry parameters of global gas profile
 
@@ -15,33 +15,28 @@ def profile_asymmetry(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         flux (ArrayLike): Array of fluxes (i.e. y-axis of gas profile spectrum)
         VHI (float): Gas-derived central velocty of the galaxy
         VOPT (float): Optically-derived central velocty of the galaxy
-        width (float | ArrayLike): Effective width of the galaxy along the velocity axis. Taken as the largest of the galaxy widths given in the MaNGA data table (i.e. WM50, WP50, etc.)
+        width (ArrayLike): Effective widths of the galaxy along the velocity axis. Include WM50, WP50, WP20, W2P50, and WF50
         plot (bool, optional): Argument to determine if the chosen global gas profile will be plotted. Defaults to False.
 
     Returns:
         ArrayLike: List of parameters passed into function call, as well as integrated fluxes for each of left (low velocity) and right (high velocity) sides of the galaxy for each of the provided central velocities. Asymmetry itself is not directly calculated to allow for flexibility in subsequent analysis
     """
+    # instead of float parameter width, use ArrayLike widths corresponding to (in order) WM50, WP50, WP20, W2P50, and WF50
+    
+    # for width, widthname in zip(widths, ['WM50', 'WP50', 'WP20', 'W2P50', 'WF50']):
+        # and show/calculate values for all of these options? waiting for KLM feedback
     
     # Calculate rms to subtract from flux
     mean_v0 = (VHI + VOPT)/2
-    rms_sel = np.argwhere(abs(velocity - mean_v0) >= width)
-    rms_sel - rms_sel.reshape(len(rms_sel))[20:-20] # Trim first and last 20 velocities of baseline to remove noise
+    rms_sel = np.transpose(np.argwhere(abs(velocity - mean_v0) >= width))[0][20:-20] # Trim first and last 20 velocities of baseline to remove noise
     rms = np.sqrt(np.mean(flux[rms_sel]**2))
     subtracted_flux = flux - rms
     
-    
-    lo_sel_HI = np.argwhere((velocity > (VHI - width)) & (velocity < VHI))
-    lo_sel_HI = lo_sel_HI.reshape(len(lo_sel_HI))
-    
-    hi_sel_HI = np.argwhere((velocity < (VHI + width)) & (velocity > VHI))
-    hi_sel_HI = hi_sel_HI.reshape(len(hi_sel_HI))
+    lo_sel_HI = np.transpose(np.argwhere((velocity > (VHI - width)) & (velocity < VHI)))[0]
+    hi_sel_HI = np.transpose(np.argwhere((velocity < (VHI + width)) & (velocity > VHI)))[0]
 
-
-    lo_sel_OPT = np.argwhere((velocity > (VOPT - width)) & (velocity < VOPT))
-    lo_sel_OPT = lo_sel_OPT.reshape(len(lo_sel_OPT))
-    
-    hi_sel_OPT = np.argwhere((velocity < (VOPT + width)) & (velocity > VOPT))
-    hi_sel_OPT = hi_sel_OPT.reshape(len(hi_sel_OPT))
+    lo_sel_OPT = np.transpose(np.argwhere((velocity > (VOPT - width)) & (velocity < VOPT)))[0]    
+    hi_sel_OPT = np.transpose(np.argwhere((velocity < (VOPT + width)) & (velocity > VOPT)))[0]
     
     
     # We will integrate using the Trapezoidal rule, found in scipy.integrate.trapezoid
@@ -55,6 +50,7 @@ def profile_asymmetry(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
     lo_flux_OPT = trapezoid(subtracted_flux[lo_sel_OPT], velocity[lo_sel_OPT])
     # High velocity side integrated flux centered at VOPT 
     hi_flux_OPT = trapezoid(subtracted_flux[hi_sel_OPT], velocity[hi_sel_OPT])
+    
     
     if plot == True:
         plt.figure(figsize= (10, 8))
