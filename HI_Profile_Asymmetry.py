@@ -24,19 +24,25 @@ def profile_asymmetry(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
     
     # Calculate rms to subtract from flux
     mean_v0 = (VHI + VOPT)/2
-    rms_sel = np.argwhere(abs(velocity - mean_v0) >= width)[20:-20] # Trim first and last 20 velocities of baseline to remove noise
+    rms_sel = np.argwhere(abs(velocity - mean_v0) >= width)
+    rms_sel - rms_sel.reshape(len(rms_sel))[20:-20] # Trim first and last 20 velocities of baseline to remove noise
     rms = np.sqrt(np.mean(flux[rms_sel]**2))
     subtracted_flux = flux - rms
     
+    
     lo_sel_HI = np.argwhere((velocity > (VHI - width)) & (velocity < VHI))
     lo_sel_HI = lo_sel_HI.reshape(len(lo_sel_HI))
-    hi_sel_HI = np.argwhere((velocity < (VHI - width)) & (velocity > VHI))
+    
+    hi_sel_HI = np.argwhere((velocity < (VHI + width)) & (velocity > VHI))
     hi_sel_HI = hi_sel_HI.reshape(len(hi_sel_HI))
+
 
     lo_sel_OPT = np.argwhere((velocity > (VOPT - width)) & (velocity < VOPT))
     lo_sel_OPT = lo_sel_OPT.reshape(len(lo_sel_OPT))
-    hi_sel_OPT = np.argwhere((velocity < (VOPT - width)) & (velocity > VOPT))
+    
+    hi_sel_OPT = np.argwhere((velocity < (VOPT + width)) & (velocity > VOPT))
     hi_sel_OPT = hi_sel_OPT.reshape(len(hi_sel_OPT))
+    
     
     # We will integrate using the Trapezoidal rule, found in scipy.integrate.trapezoid
     
@@ -53,6 +59,7 @@ def profile_asymmetry(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
     if plot == True:
         plt.figure(figsize= (10, 8))
         plt.plot(velocity, subtracted_flux, color = 'black')
+        plt.axhline(0, c='gray', lw = 1)
         
         plt.axvline(VHI - width, lw = 2, color = 'tab:red', label = 'VHI-based width')
         plt.axvline(VHI + width, lw = 2, color = 'tab:red')
