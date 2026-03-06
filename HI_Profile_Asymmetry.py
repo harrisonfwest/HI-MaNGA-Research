@@ -26,7 +26,7 @@ def find_edges(velocity: ArrayLike, flux: ArrayLike, v_central: float, rms: floa
     high_edge = None
     
     if rms == None:
-        rms_sel = np.transpose(np.argwhere(abs(velocity - v_central) >= width))[0][20:-20] # Trim first and last 20 velocities of baseline to remove noise
+        rms_sel = np.transpose(np.argwhere(abs(velocity - v_central) >= width))[0][20:-20] # Trim first and last 20 velocities of baseline to remove noise>
         rms = np.sqrt(np.mean(flux[rms_sel]**2))
         
     cen_vel = np.argwhere(velocity == v_central)
@@ -65,7 +65,8 @@ def profile_asymmetry(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         plot (bool, optional): Argument to determine if the chosen global gas profile will be plotted. Defaults to False.
 
     Returns:
-        ArrayLike: List of parameters passed into function call, as well as integrated fluxes for each of left (low velocity) and right (high velocity) sides of the galaxy for each of the provided central velocities. Asymmetry itself is not directly calculated to allow for flexibility in subsequent analysis
+        ArrayLike: List of parameters passed into function call, as well as integrated fluxes for each of left (low velocity) and right (high velocity) sides of the galaxy
+        for each of the provided central velocities. Asymmetry itself is not directly calculated to allow for flexibility in subsequent analysis
     """
     
     # instead of float parameter width, use ArrayLike widths corresponding to (in order) WM50, WP50, WP20, W2P50, and WF50
