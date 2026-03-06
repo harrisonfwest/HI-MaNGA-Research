@@ -6,6 +6,52 @@ from astropy.io import fits
 from scipy.integrate import trapezoid
 from astropy.io import fits
 
+def find_edges(velocity: ArrayLike, flux: ArrayLike, v_central: float, rms: float = None, threshold: float = 3, max_bins: int = 7) -> ArrayLike:
+    """
+    Algorithm to find edges of 1D spectrum (i.e. flux over a range of velocities) by detecting where the spectrum is reduced to noise
+
+    Args:
+        velocity (ArrayLike): Array of velocities (i.e. x-axis of gas profile spectrum)
+        flux (ArrayLike): Array of fluxes (i.e. y-axis of gas profile spectrum)
+        v_central (float): Central velocity of the galaxy
+        rms (float, optional): Optional parameter of pre-calculated RMS noise. If no value is provided, it will be calculated from the spectrum. Defaults to None.
+        threshold (float, optional): Sigma level below which spectrum is considered noisy (i.e. above how many multiples of the RMS is the data a detection?). Defaults to 3.
+        max_bins (int, optional): Number of consecutive points required to be within the noise threshold for an edge to be reported. Defaults to 7.
+
+    Returns:
+        ArrayLike: Returns a two-element array of low and high velocity side edges corresponding indices along the velocity axis.
+    """
+    
+    low_edge = None
+    high_edge = None
+    
+    if rms == None:
+        rms_sel = np.transpose(np.argwhere(abs(velocity - v_central) >= width))[0][20:-20] # Trim first and last 20 velocities of baseline to remove noise
+        rms = np.sqrt(np.mean(flux[rms_sel]**2))
+        
+    cen_vel = np.argwhere(velocity == v_central)
+    low_vel = cen_vel - 200 # Assuming 200 indices is a reasonable range within which to find the edge of the galaxy
+    high_vel = cen_vel + 200
+    
+    for i in range(cen_vel-6, low_vel):
+        if flux[i:i+max_bins - 1].all <= rms * threshold:
+            low_edge = i+max_bins-1
+            break
+    
+    for i in range(cen_vel+6, high_vel):
+        if flux[i:i-max_bins + 1].all <= rms * threshold:
+            low_edge = i-max_bins+1
+            break
+    
+    # If no suitable edges are found, choose 200 indices (~1000 km/s) from central velocity
+    if low_edge == None:
+        low_edge = low_vel
+    if high_edge == None:
+        high_edge = high_vel
+    
+    return [low_edge, high_edge]
+
+
 def profile_asymmetry(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: float, VOPT: float, widths: ArrayLike, plot: bool = False) -> ArrayLike:
     """
     Function to calculate asymmetry parameters of global gas profile
@@ -45,6 +91,8 @@ def profile_asymmetry(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         rms_sel = np.transpose(np.argwhere(abs(velocity - mean_v0) >= width))[0][20:-20] # Trim first and last 20 velocities of baseline to remove noise
         rms = np.sqrt(np.mean(flux[rms_sel]**2))
         subtracted_flux = flux - rms
+        
+        # low_edge_index, high_edge_index = find_edges(velocity, flux, mean_v0, rms)
         
         lo_sel_HI = np.transpose(np.argwhere((velocity > (VHI - width)) & (velocity < VHI)))[0]
         hi_sel_HI = np.transpose(np.argwhere((velocity < (VHI + width)) & (velocity > VHI)))[0]
