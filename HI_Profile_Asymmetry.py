@@ -70,19 +70,18 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
     
     # velocity_index_pairs now ordered as follows:
     # [VHI based WM50 indices], [VHI based WP50 indices], [VHI based WP20 indices], [VHI based W2P50 indices], [VHI based WF50 indices],
-    # [VOPT based WM50 indices], [VOPT based WP50 indices], [VOPT based WP20 indices], [VOPT based W2P50 indices], [VOPT based WF50 indices]
+    # ... [VOPT based WM50 indices], [VOPT based WP50 indices], [VOPT based WP20 indices], [VOPT based W2P50 indices], [VOPT based WF50 indices]
     
-    # TODO: resume debugging here
     for i in range(5):
-        lo_sel = np.transpose(np.argwhere((velocity > velocity_index_pairs[i][0]) & (velocity < VHI)))[0]
-        hi_sel = np.transpose(np.argwhere((velocity < velocity_index_pairs[i][1]) & (velocity > VHI)))[0]
+        lo_sel = np.transpose(np.argwhere((velocity > velocity[velocity_index_pairs[i][0]]) & (velocity < VHI)))[0]
+        hi_sel = np.transpose(np.argwhere((velocity < velocity[velocity_index_pairs[i][1]]) & (velocity > VHI)))[0]
         lo_flux = trapezoid(flux[lo_sel], velocity[lo_sel])
         hi_flux = trapezoid(flux[hi_sel], velocity[hi_sel])
         flux_pairs.append([lo_flux, hi_flux])
         
     for i in range(5):
-        lo_sel = np.transpose(np.argwhere((velocity > velocity_index_pairs[i+5][0]) & (velocity < VOPT)))[0]
-        hi_sel = np.transpose(np.argwhere((velocity < velocity_index_pairs[i+5][1]) & (velocity > VOPT)))[0]
+        lo_sel = np.transpose(np.argwhere((velocity > velocity[velocity_index_pairs[i+5][0]]) & (velocity < VOPT)))[0]
+        hi_sel = np.transpose(np.argwhere((velocity < velocity[velocity_index_pairs[i+5][1]]) & (velocity > VOPT)))[0]
         lo_flux = trapezoid(flux[lo_sel], velocity[lo_sel])
         hi_flux = trapezoid(flux[hi_sel], velocity[hi_sel])
         flux_pairs.append([lo_flux, hi_flux])
@@ -108,13 +107,13 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         
         width_names = ['WM50', 'WP50', 'WP20', 'W2P50', 'WF50', 'analytically calculated']
         
-        for vels, width_name in zip(velocity_index_pairs, width_names):
-            if color_count < 6:
-                cen = 'VHI'
-            elif color_count >= 6:
-                cen = 'VOPT'
-            plt.axvline(velocity[vels[0]], color = 'C' + str(color_count), label = cen + '-based ' + width_name + ' edges')
-            plt.axvline(velocity[vels[1]], color = 'C' + str(color_count))
+        for vels, width_name in zip(velocity_index_pairs[0:6], width_names):
+            plt.axvline(velocity[vels[0]], lw = 1, color = 'C' + str(color_count), label = 'VHI-based ' + width_name + ' edges')
+            plt.axvline(velocity[vels[1]], lw = 1, color = 'C' + str(color_count))
+            color_count += 1
+        for vels, width_name in zip(velocity_index_pairs[6::], width_names):
+            plt.axvline(velocity[vels[0]], lw = 1, color = 'C' + str(color_count), label = 'VOPT-based ' + width_name + ' edges')
+            plt.axvline(velocity[vels[1]], lw = 1, color = 'C' + str(color_count))
             color_count += 1
         
         plt.legend()
