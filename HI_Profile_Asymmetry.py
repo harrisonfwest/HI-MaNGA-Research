@@ -10,7 +10,7 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return array[idx]
 
-def find_edges(velocity: ArrayLike, flux: ArrayLike, v0: float, threshold: float = 5, max_bins: int = 12) -> ArrayLike:
+def find_edges(velocity: ArrayLike, flux: ArrayLike, v0: float, threshold: float = 2, max_bins: int = 12) -> ArrayLike:
     """
     Algorithm to find edges of 1D spectrum (i.e. flux over a range of velocities) by detecting where the spectrum is reduced to noise
     for a given number of consecutive points
@@ -19,41 +19,47 @@ def find_edges(velocity: ArrayLike, flux: ArrayLike, v0: float, threshold: float
         velocity (ArrayLike): Array of velocities (i.e. x-axis of gas profile spectrum)
         flux (ArrayLike): Array of fluxes (i.e. y-axis of gas profile spectrum)
         v0 (float): Central velocity of the galaxy
-        rms (float, optional): Optional parameter of pre-calculated RMS noise. If no value is provided, it will be calculated from the spectrum. Defaults to None.
-        threshold (float, optional): Sigma level below which spectrum is considered noisy (i.e. above how many multiples of the RMS is the data a detection?). Defaults to 5.
+        threshold (float, optional): Sigma level below which spectrum is considered noisy (i.e. above how many multiples of the RMS is the data a detection?). Defaults to 2.
         max_bins (int, optional): Number of consecutive points required to be within the noise threshold to define an edge. Defaults to 12.
 
     Returns:
-        ArrayLike: Returns a two-element array of low and high velocity side edges corresponding indices along the velocity axis.
+        ArrayLike: Returns a two-element array of low and high velocity side edge indices corresponding indices along the velocity axis.
     """
     
     low_edge = None
     high_edge = None
     
-    rms_sel = np.transpose(np.argwhere(abs(velocity - v0) >= 500))[0][20:-20] # Trim first and last 20 velocities of baseline to remove artifacts, and assume 750 km/s away from center is baseline noise
+    cen_vel = np.argwhere(velocity == find_nearest(velocity, v0))[0, 0] # Index of velocity closest to v0
+    
+    low_rms_sel = np.arange(20, cen_vel - 100)
+    hi_rms_sel = np.arange(cen_vel + 100, len(velocity) - 20)
+    rms_sel = np.append(low_rms_sel, hi_rms_sel)
     rms = np.sqrt(np.mean(flux[rms_sel]**2))
+            
+    cen_vel = np.argwhere(velocity == find_nearest(velocity, v0))[0, 0] # Index of velocity closest to v0
+    low_vel = cen_vel - 100 # Assumes that the edges of the galaxy are each within 100 indices of v0 such that beyond 100 in either direction is all baseline
+    high_vel = cen_vel + 100
         
-    cen_vel = np.argwhere(velocity == find_nearest(velocity, v0))[0, 0]
-    low_vel = cen_vel - 200 # Assuming 200 indices is a reasonable range within which to find the edge of the galaxy
-    high_vel = cen_vel + 200
-    
-    for i in range(cen_vel - max_bins + 1, low_vel):
-        if flux[i:i+max_bins - 1].all() <= rms * threshold:
-            low_edge = i+max_bins-1
+    for i in np.arange(low_vel, cen_vel - max_bins)[::-1]:
+        if all(x <= (rms * threshold) for x in flux[i : i + max_bins - 1]) and ((i + max_bins - 1) < cen_vel):
+            low_edge = i# + max_bins - 1
             break
     
-    for i in range(cen_vel + max_bins - 1, high_vel):
-        if flux[i:i-max_bins + 1].all() <= rms * threshold:
-            low_edge = i-max_bins+1
+    for i in np.arange(cen_vel + max_bins, high_vel):
+        if all(x <= (rms * threshold) for x in flux[i - max_bins + 1:i]):
+            high_edge = i# - max_bins + 1
             break
     
-    # If no suitable edges are found, choose 200 indices (~1000 km/s) from central velocity
+    # If either a low or high edges fails to be found, choose 100 indices from central velocity as the edge
     if low_edge == None:
         low_edge = low_vel
     if high_edge == None:
         high_edge = high_vel
     
-    return [low_edge, high_edge]
+    res = [low_edge, high_edge]
+    print(res)
+    print(velocity[res])
+    return res
 
 def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: float, VOPT: float, widths: ArrayLike, plot: bool = False) -> ArrayLike:
     """ Function to calculate relative integrated fluxes about central velocity of galaxy from global HI profile. Preserves and returns input parameters and their derived values.
@@ -113,7 +119,7 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
     
     if plot:
         color_count = 1
-        plt.figure(figsize= (10, 8))
+        plt.figure(figsize= (10, 8), dpi= 500)
         plt.plot(velocity, flux, color = 'black')
         plt.axhline(0, c='gray', lw = 2)
         
@@ -127,12 +133,12 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         width_names = ['WM50', 'WP50', 'WP20', 'W2P50', 'WF50', 'analytically calculated']
         
         for vels, width_name in zip(velocity_index_pairs[0:6], width_names):
-            plt.axvline(velocity[vels[0]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count), label = 'VHI-based ' + width_name + ' edges')
-            plt.axvline(velocity[vels[1]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count))
+            plt.axvline(velocity[vels[0]], linestyle = 'dashdot', lw = 1, color = 'C' + str(color_count), label = 'VHI-based ' + width_name + ' edges')
+            plt.axvline(velocity[vels[1]], linestyle = 'dashdot', lw = 1, color = 'C' + str(color_count))
             color_count += 1
         for vels, width_name in zip(velocity_index_pairs[6::], width_names):
-            plt.axvline(velocity[vels[0]], linestyle = 'dashdot', lw = 1, color = 'C' + str(color_count), label = 'VOPT-based ' + width_name + ' edges')
-            plt.axvline(velocity[vels[1]], linestyle = 'dashdot', lw = 1, color = 'C' + str(color_count))
+            plt.axvline(velocity[vels[0]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count), label = 'VOPT-based ' + width_name + ' edges')
+            plt.axvline(velocity[vels[1]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count))
             color_count += 1
         
         plt.legend()
