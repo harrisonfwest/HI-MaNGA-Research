@@ -108,12 +108,12 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         width_names = ['WM50', 'WP50', 'WP20', 'W2P50', 'WF50', 'analytically calculated']
         
         for vels, width_name in zip(velocity_index_pairs[0:6], width_names):
-            plt.axvline(velocity[vels[0]], lw = 1, color = 'C' + str(color_count), label = 'VHI-based ' + width_name + ' edges')
-            plt.axvline(velocity[vels[1]], lw = 1, color = 'C' + str(color_count))
+            plt.axvline(velocity[vels[0]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count), label = 'VHI-based ' + width_name + ' edges')
+            plt.axvline(velocity[vels[1]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count))
             color_count += 1
         for vels, width_name in zip(velocity_index_pairs[6::], width_names):
-            plt.axvline(velocity[vels[0]], lw = 1, color = 'C' + str(color_count), label = 'VOPT-based ' + width_name + ' edges')
-            plt.axvline(velocity[vels[1]], lw = 1, color = 'C' + str(color_count))
+            plt.axvline(velocity[vels[0]], linestyle = 'dashdot', lw = 1, color = 'C' + str(color_count), label = 'VOPT-based ' + width_name + ' edges')
+            plt.axvline(velocity[vels[1]], linestyle = 'dashdot', lw = 1, color = 'C' + str(color_count))
             color_count += 1
         
         plt.legend()
