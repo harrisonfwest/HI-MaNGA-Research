@@ -54,7 +54,25 @@ def find_edges(velocity: ArrayLike, flux: ArrayLike, v_central: float, threshold
     
     return [low_edge, high_edge]
 
-def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: float, VOPT: float, widths = ArrayLike, plot: bool = False) -> ArrayLike:
+def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: float, VOPT: float, widths: ArrayLike, plot: bool = False) -> ArrayLike:
+    """ Function to calculate relative integrated fluxes about central velocity of galaxy from global HI profile. Preserves and returns input parameters and their derived values.
+
+    Args:
+        plateIFU (str): Galaxy observation plate IFU number for identification in HI-MaNGA database
+        velocity (ArrayLike): Array of velocities; x-axis of global HI profile
+        flux (ArrayLike): Array of fluxes; y-axis of global HI profile
+        VHI (float): HI-derived central velocity of galaxy along velocity axis
+        VOPT (float): Optically derived central velocity of galaxy along velocity axis
+        widths (ArrayLike): List of different measured galaxy widths along velocity axis. Found in HI-MaNGA data table
+        plot (bool, optional): Option to display a plot of the global profile, along with vertical lines indicating where galaxy edges are reported or have been found. Defaults to False.
+
+    Returns:
+        ArrayLike: Returns an array of Plate IFU number; HI and Optically derived central velocities; 
+        pairs of velocities indices corresponding to edges both from given widths and calculated edges, for both central velocites;
+        and pairs of relative integrated fluxes for the provided edges.
+        Edge index and flux pairs are ordered as follows: VHI-WM50, VHI-WP50, VHI-WP20, VHI-W2P50, VHI-WF50, VHI-calculated,
+        VOPT-WM50, VOPT-WP50, VOPT-WP20, VOPT-W2P50, VOPT-WF50, VOPT-calculated
+    """
     v0_arr = [VHI, VOPT]
     flux_pairs = []
     
