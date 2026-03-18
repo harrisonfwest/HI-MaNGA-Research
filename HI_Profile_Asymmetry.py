@@ -10,14 +10,15 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return array[idx]
 
-def find_edges(velocity: ArrayLike, flux: ArrayLike, v_central: float, threshold: float = 5, max_bins: int = 12) -> ArrayLike:
+def find_edges(velocity: ArrayLike, flux: ArrayLike, v0: float, threshold: float = 5, max_bins: int = 12) -> ArrayLike:
     """
     Algorithm to find edges of 1D spectrum (i.e. flux over a range of velocities) by detecting where the spectrum is reduced to noise
+    for a given number of consecutive points
 
     Args:
         velocity (ArrayLike): Array of velocities (i.e. x-axis of gas profile spectrum)
         flux (ArrayLike): Array of fluxes (i.e. y-axis of gas profile spectrum)
-        v_central (float): Central velocity of the galaxy
+        v0 (float): Central velocity of the galaxy
         rms (float, optional): Optional parameter of pre-calculated RMS noise. If no value is provided, it will be calculated from the spectrum. Defaults to None.
         threshold (float, optional): Sigma level below which spectrum is considered noisy (i.e. above how many multiples of the RMS is the data a detection?). Defaults to 5.
         max_bins (int, optional): Number of consecutive points required to be within the noise threshold to define an edge. Defaults to 12.
@@ -29,10 +30,10 @@ def find_edges(velocity: ArrayLike, flux: ArrayLike, v_central: float, threshold
     low_edge = None
     high_edge = None
     
-    rms_sel = np.transpose(np.argwhere(abs(velocity - v_central) >= 750))[0][20:-20] # Trim first and last 20 velocities of baseline to remove artifacts, and assume 750 km/s away from center is baseline noise
+    rms_sel = np.transpose(np.argwhere(abs(velocity - v0) >= 500))[0][20:-20] # Trim first and last 20 velocities of baseline to remove artifacts, and assume 750 km/s away from center is baseline noise
     rms = np.sqrt(np.mean(flux[rms_sel]**2))
         
-    cen_vel = np.argwhere(velocity == find_nearest(velocity, v_central))[0, 0]
+    cen_vel = np.argwhere(velocity == find_nearest(velocity, v0))[0, 0]
     low_vel = cen_vel - 200 # Assuming 200 indices is a reasonable range within which to find the edge of the galaxy
     high_vel = cen_vel + 200
     
@@ -74,17 +75,17 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         VOPT-WM50, VOPT-WP50, VOPT-WP20, VOPT-W2P50, VOPT-WF50, VOPT-calculated
     """
     v0_arr = [VHI, VOPT]
-    flux_pairs = []
     
+    flux_pairs = []
     velocity_index_pairs = []
+    
     for v0 in v0_arr:
         for w in widths:
             lo_vel_index = np.argwhere(velocity == find_nearest(velocity, round(v0 - w)))[0, 0]
             hi_vel_index = np.argwhere(velocity == find_nearest(velocity, round(v0 + w)))[0, 0]
             arr = [lo_vel_index, hi_vel_index]
             velocity_index_pairs.append(arr)
-        arr = find_edges(velocity, flux, v0)
-        velocity_index_pairs.append(arr)
+        velocity_index_pairs.append(find_edges(velocity, flux, v0))
     
     # velocity_index_pairs now ordered as follows:
     # [VHI based WM50 indices], [VHI based WP50 indices], [VHI based WP20 indices], [VHI based W2P50 indices], [VHI based WF50 indices],
