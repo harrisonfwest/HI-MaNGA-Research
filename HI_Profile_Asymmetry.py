@@ -57,8 +57,6 @@ def find_edges(velocity: ArrayLike, flux: ArrayLike, v0: float, threshold: float
         high_edge = high_vel
     
     res = [low_edge, high_edge]
-    print(res)
-    print(velocity[res])
     return res
 
 def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: float, VOPT: float, widths: ArrayLike, plot: bool = False) -> ArrayLike:
