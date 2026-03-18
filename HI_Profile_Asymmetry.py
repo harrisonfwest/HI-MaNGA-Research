@@ -4,9 +4,8 @@ from numpy.typing import ArrayLike
 import matplotlib.pyplot as plt
 from astropy.io import fits
 from scipy.integrate import trapezoid
-from astropy.io import fits
 
-def find_edges(velocity: ArrayLike, flux: ArrayLike, v_central: float, rms: float = None, threshold: float = 3, max_bins: int = 7) -> ArrayLike:
+def find_edges(velocity: ArrayLike, flux: ArrayLike, v_central: float, threshold: float = 3, max_bins: int = 12) -> ArrayLike:
     """
     Algorithm to find edges of 1D spectrum (i.e. flux over a range of velocities) by detecting where the spectrum is reduced to noise
 
@@ -16,7 +15,7 @@ def find_edges(velocity: ArrayLike, flux: ArrayLike, v_central: float, rms: floa
         v_central (float): Central velocity of the galaxy
         rms (float, optional): Optional parameter of pre-calculated RMS noise. If no value is provided, it will be calculated from the spectrum. Defaults to None.
         threshold (float, optional): Sigma level below which spectrum is considered noisy (i.e. above how many multiples of the RMS is the data a detection?). Defaults to 3.
-        max_bins (int, optional): Number of consecutive points required to be within the noise threshold for an edge to be reported. Defaults to 7.
+        max_bins (int, optional): Number of consecutive points required to be within the noise threshold to define an edge. Defaults to 12.
 
     Returns:
         ArrayLike: Returns a two-element array of low and high velocity side edges corresponding indices along the velocity axis.
@@ -25,20 +24,19 @@ def find_edges(velocity: ArrayLike, flux: ArrayLike, v_central: float, rms: floa
     low_edge = None
     high_edge = None
     
-    if rms == None:
-        rms_sel = np.transpose(np.argwhere(abs(velocity - v_central) >= width))[0][20:-20] # Trim first and last 20 velocities of baseline to remove noise>
-        rms = np.sqrt(np.mean(flux[rms_sel]**2))
+    rms_sel = np.transpose(np.argwhere(abs(velocity - v_central) >= 750))[0][20:-20] # Trim first and last 20 velocities of baseline to remove artifacts, and assume 750 km/s away from center is baseline noise
+    rms = np.sqrt(np.mean(flux[rms_sel]**2))
         
     cen_vel = np.argwhere(velocity == v_central)
     low_vel = cen_vel - 200 # Assuming 200 indices is a reasonable range within which to find the edge of the galaxy
     high_vel = cen_vel + 200
     
-    for i in range(cen_vel-6, low_vel):
+    for i in range(cen_vel - max_bins + 1, low_vel):
         if flux[i:i+max_bins - 1].all <= rms * threshold:
             low_edge = i+max_bins-1
             break
     
-    for i in range(cen_vel+6, high_vel):
+    for i in range(cen_vel + max_bins - 1, high_vel):
         if flux[i:i-max_bins + 1].all <= rms * threshold:
             low_edge = i-max_bins+1
             break
