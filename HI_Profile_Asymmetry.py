@@ -10,7 +10,7 @@ def find_nearest(array, value):
     idx = (np.abs(array - value)).argmin()
     return array[idx]
 
-def find_edges(velocity: ArrayLike, flux: ArrayLike, v0: float, threshold: float = 2, max_bins: int = 12) -> ArrayLike:
+def find_edges(velocity: ArrayLike, flux: ArrayLike, v0: float, max_bins: int = 12) -> ArrayLike:
     """
     Algorithm to find edges of 1D spectrum (i.e. flux over a range of velocities) by detecting where the spectrum is reduced to noise
     for a given number of consecutive points
@@ -19,7 +19,6 @@ def find_edges(velocity: ArrayLike, flux: ArrayLike, v0: float, threshold: float
         velocity (ArrayLike): Array of velocities (i.e. x-axis of gas profile spectrum)
         flux (ArrayLike): Array of fluxes (i.e. y-axis of gas profile spectrum)
         v0 (float): Central velocity of the galaxy
-        threshold (float, optional): Sigma level below which spectrum is considered noisy (i.e. above how many multiples of the RMS is the data a detection?). Defaults to 2.
         max_bins (int, optional): Number of consecutive points required to be within the noise threshold to define an edge. Defaults to 12.
 
     Returns:
@@ -36,18 +35,17 @@ def find_edges(velocity: ArrayLike, flux: ArrayLike, v0: float, threshold: float
     rms_sel = np.append(low_rms_sel, hi_rms_sel)
     rms = np.sqrt(np.mean(flux[rms_sel]**2))
             
-    cen_vel = np.argwhere(velocity == find_nearest(velocity, v0))[0, 0] # Index of velocity closest to v0
     low_vel = cen_vel - 100 # Assumes that the edges of the galaxy are each within 100 indices of v0 such that beyond 100 in either direction is all baseline
     high_vel = cen_vel + 100
-        
+
     for i in np.arange(low_vel, cen_vel - max_bins)[::-1]:
-        if all(x <= (rms * threshold) for x in flux[i : i + max_bins - 1]) and ((i + max_bins - 1) < cen_vel):
-            low_edge = i# + max_bins - 1
+        if all(x <= (rms * 1.5) for x in flux[i: i + max_bins - 1]):
+            low_edge = i + max_bins - 1
             break
     
     for i in np.arange(cen_vel + max_bins, high_vel):
-        if all(x <= (rms * threshold) for x in flux[i - max_bins + 1:i]):
-            high_edge = i# - max_bins + 1
+        if all(x <= (rms * 1.5) for x in flux[i - max_bins + 1:i]):
+            high_edge = i - max_bins + 1
             break
     
     # If either a low or high edges fails to be found, choose 100 indices from central velocity as the edge
@@ -57,6 +55,7 @@ def find_edges(velocity: ArrayLike, flux: ArrayLike, v0: float, threshold: float
         high_edge = high_vel
     
     res = [low_edge, high_edge]
+    
     return res
 
 def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: float, VOPT: float, widths: ArrayLike, plot: bool = False) -> ArrayLike:
@@ -78,6 +77,9 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         Edge index and flux pairs are ordered as follows: VHI-WM50, VHI-WP50, VHI-WP20, VHI-W2P50, VHI-WF50, VHI-calculated,
         VOPT-WM50, VOPT-WP50, VOPT-WP20, VOPT-W2P50, VOPT-WF50, VOPT-calculated
     """
+    
+    print(widths)
+
     v0_arr = [VHI, VOPT]
     
     flux_pairs = []
@@ -92,22 +94,29 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         velocity_index_pairs.append(find_edges(velocity, flux, v0))
     
     # velocity_index_pairs now ordered as follows:
-    # [VHI based WM50 indices], [VHI based WP50 indices], [VHI based WP20 indices], [VHI based W2P50 indices], [VHI based WF50 indices],
-    # ... [VOPT based WM50 indices], [VOPT based WP50 indices], [VOPT based WP20 indices], [VOPT based W2P50 indices], [VOPT based WF50 indices]
+    # [VHI based WM50 indices], [VHI based WP50 indices], [VHI based WP20 indices], [VHI based W2P50 indices], [VHI based WF50 indices], [VHI based analytical indices]
+    # ... [VOPT based WM50 indices], [VOPT based WP50 indices], [VOPT based WP20 indices], [VOPT based W2P50 indices], [VOPT based WF50 indices], [VOPT based analytical indices]
     
-    for i in range(5):
-        lo_sel = np.transpose(np.argwhere((velocity > velocity[velocity_index_pairs[i][0]]) & (velocity < VHI)))[0]
-        hi_sel = np.transpose(np.argwhere((velocity < velocity[velocity_index_pairs[i][1]]) & (velocity > VHI)))[0]
-        lo_flux = trapezoid(flux[lo_sel], velocity[lo_sel])
-        hi_flux = trapezoid(flux[hi_sel], velocity[hi_sel])
+    # for v0 in v0_arr:
+    c = 0
+    for vel_pair in velocity_index_pairs:
+        if c <= 5:
+            cen_vel = np.argwhere(velocity == find_nearest(velocity, VHI))[0, 0]
+        else:
+            cen_vel = np.argwhere(velocity == find_nearest(velocity, VOPT))[0, 0]
+        
+        bin_width = abs(velocity[cen_vel] - velocity[cen_vel - 1])
+        
+        lo_sel = np.arange(vel_pair[0], cen_vel)
+        hi_sel = np.arange(cen_vel + 1, vel_pair[1])
+        
+        lo_flux = np.sum(flux[lo_sel]) * bin_width
+        hi_flux = np.sum(flux[hi_sel]) * bin_width
+        
         flux_pairs.append([lo_flux, hi_flux])
         
-    for i in range(5):
-        lo_sel = np.transpose(np.argwhere((velocity > velocity[velocity_index_pairs[i+5][0]]) & (velocity < VOPT)))[0]
-        hi_sel = np.transpose(np.argwhere((velocity < velocity[velocity_index_pairs[i+5][1]]) & (velocity > VOPT)))[0]
-        lo_flux = trapezoid(flux[lo_sel], velocity[lo_sel])
-        hi_flux = trapezoid(flux[hi_sel], velocity[hi_sel])
-        flux_pairs.append([lo_flux, hi_flux])
+        print('Velocity index pair with cen_vel index: ', [vel_pair[0], cen_vel, vel_pair[1]])
+        print('Flux pair: ', [lo_flux, hi_flux])
     
     # flux_pairs now contains left and right integrated fluxes for ordering described above
     
@@ -119,11 +128,11 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         color_count = 1
         plt.figure(figsize= (10, 8), dpi= 500)
         plt.plot(velocity, flux, color = 'black')
-        plt.axhline(0, c='gray', lw = 2)
+        # plt.axhline(0, c='gray', lw = 2)
         
         plt.title('Global HI profile of Plate-IFU: ' + plateIFU)
-        plt.xlabel('Velocity')
-        plt.ylabel('Flux')
+        plt.xlabel(r'Velocity [km s$^{-1}$]')
+        plt.ylabel('Flux [Jy]')
         
         plt.axvline(VHI, lw = 2, color = 'lime', linestyle = '--', label = 'VHI central velocity')
         plt.axvline(VOPT, lw = 2, color = 'magenta', linestyle = '--', label = 'VOPT central velocity')
