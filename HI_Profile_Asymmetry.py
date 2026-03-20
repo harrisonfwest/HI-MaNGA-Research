@@ -142,6 +142,7 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
     # print(widths)
     # print(width_names)
     
+    
     if plot:
         color_count = 1
         plt.figure(figsize= (10, 8), dpi= 500)
@@ -152,8 +153,8 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         plt.xlabel(r'Velocity [km s$^{-1}$]')
         plt.ylabel('Flux [Jy]')
         
-        plt.axvline(VHI, lw = 2, color = 'lime', linestyle = '--', label = 'VHI central velocity')
-        plt.axvline(VOPT, lw = 2, color = 'magenta', linestyle = '--', label = 'VOPT central velocity')
+        plt.axvline(VHI, lw = 2, color = 'lime', linestyle = 'dashdot', label = 'VHI central velocity')
+        plt.axvline(VOPT, lw = 2, color = 'magenta', linestyle = 'dotted', label = 'VOPT central velocity')
                 
         for vels, width_name in zip(velocity_index_pairs[0:5], width_names):
             if not any(x == None for x in vels):
@@ -178,6 +179,7 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
             plt.axvline(velocity[vels[1]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count))
         
         plt.legend()
+        
         plt.show()
     
     return res
