@@ -78,8 +78,18 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         VOPT-WM50, VOPT-WP50, VOPT-WP20, VOPT-W2P50, VOPT-WF50, VOPT-calculated
     """
     
-    print(widths)
+    # Debug:
+    # print(widths)
 
+    # Apparently, the direction of the velocity array varies by file. Must make sure it's uniform to correctly analyze
+    if velocity[0] > velocity[1]:
+        velocity = velocity[::-1]
+        flux = flux[::-1]
+    
+    # Debug: 
+    # print(velocity)
+    # print(flux)
+    
     v0_arr = [VHI, VOPT]
     
     flux_pairs = []
@@ -87,9 +97,12 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
     
     for v0 in v0_arr:
         for w in widths:
-            lo_vel_index = np.argwhere(velocity == find_nearest(velocity, round(v0 - w)))[0, 0]
-            hi_vel_index = np.argwhere(velocity == find_nearest(velocity, round(v0 + w)))[0, 0]
-            arr = [lo_vel_index, hi_vel_index]
+            if w == -999.0:
+                arr = [None, None]
+            else:
+                lo_vel_index = np.argwhere(velocity == find_nearest(velocity, round(v0 - w)))[0, 0]
+                hi_vel_index = np.argwhere(velocity == find_nearest(velocity, round(v0 + w)))[0, 0]
+                arr = [lo_vel_index, hi_vel_index]
             velocity_index_pairs.append(arr)
         velocity_index_pairs.append(find_edges(velocity, flux, v0))
     
@@ -100,29 +113,40 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
     # for v0 in v0_arr:
     c = 0
     for vel_pair in velocity_index_pairs:
+        if any(x == None for x in vel_pair):
+            flux_pairs.append([None, None])
+            c += 1
+            continue
+        
         if c <= 5:
             cen_vel = np.argwhere(velocity == find_nearest(velocity, VHI))[0, 0]
+            c += 1
         else:
             cen_vel = np.argwhere(velocity == find_nearest(velocity, VOPT))[0, 0]
         
-        bin_width = abs(velocity[cen_vel] - velocity[cen_vel - 1])
+                
+        # Debug:
+        # print('Integrating from index ', vel_pair[0], ' to ', cen_vel, ' and from ', cen_vel + 1, ' to ', vel_pair[1])
         
         lo_sel = np.arange(vel_pair[0], cen_vel)
         hi_sel = np.arange(cen_vel + 1, vel_pair[1])
         
-        lo_flux = np.sum(flux[lo_sel]) * bin_width
-        hi_flux = np.sum(flux[hi_sel]) * bin_width
+        lo_flux = np.trapz(flux[lo_sel], velocity[lo_sel])
+        hi_flux = np.trapz(flux[hi_sel], velocity[hi_sel])
         
         flux_pairs.append([lo_flux, hi_flux])
+    
         
-        print('Velocity index pair with cen_vel index: ', [vel_pair[0], cen_vel, vel_pair[1]])
-        print('Flux pair: ', [lo_flux, hi_flux])
-    
-    # flux_pairs now contains left and right integrated fluxes for ordering described above
-    
     res = [plateIFU, v0_arr]
     res.append(velocity_index_pairs)
     res.append(flux_pairs)
+    
+    # width_names = ['WM50', 'WP50', 'WP20', 'W2P50', 'WF50', 'analytically calculated']
+    width_names = ['WM50', 'WP50', 'WP20', 'W2P50', 'WF50']
+    
+    # Debug: 
+    print(widths)
+    # print(width_names)
     
     if plot:
         color_count = 1
@@ -136,17 +160,28 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         
         plt.axvline(VHI, lw = 2, color = 'lime', linestyle = '--', label = 'VHI central velocity')
         plt.axvline(VOPT, lw = 2, color = 'magenta', linestyle = '--', label = 'VOPT central velocity')
+                
+        for vels, width_name in zip(velocity_index_pairs[0:5], width_names):
+            if not any(x == None for x in vels):
+                plt.axvline(velocity[vels[0]], linestyle = 'dashdot', lw = 1, color = 'C' + str(color_count), label = 'VHI-based ' + width_name + ' edges')
+                plt.axvline(velocity[vels[1]], linestyle = 'dashdot', lw = 1, color = 'C' + str(color_count))
+                color_count += 1
+        for vels, width_name in zip(velocity_index_pairs[6:11], width_names):
+            if not any(x == None for x in vels):
+                plt.axvline(velocity[vels[0]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count), label = 'VOPT-based ' + width_name + ' edges')
+                plt.axvline(velocity[vels[1]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count))
+                color_count += 1
         
-        width_names = ['WM50', 'WP50', 'WP20', 'W2P50', 'WF50', 'analytically calculated']
-        
-        for vels, width_name in zip(velocity_index_pairs[0:6], width_names):
-            plt.axvline(velocity[vels[0]], linestyle = 'dashdot', lw = 1, color = 'C' + str(color_count), label = 'VHI-based ' + width_name + ' edges')
+        if not any(x == None for x in velocity_index_pairs[5]):
+            vels = velocity_index_pairs[5]
+            plt.axvline(velocity[vels[0]], linestyle = 'dashdot', lw = 1, color = 'C' + str(color_count), label = 'VHI-based analytically calculated edges')
             plt.axvline(velocity[vels[1]], linestyle = 'dashdot', lw = 1, color = 'C' + str(color_count))
             color_count += 1
-        for vels, width_name in zip(velocity_index_pairs[6::], width_names):
-            plt.axvline(velocity[vels[0]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count), label = 'VOPT-based ' + width_name + ' edges')
+        
+        if not any(x == None for x in velocity_index_pairs[11]):
+            vels = velocity_index_pairs[11]
+            plt.axvline(velocity[vels[0]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count), label = 'VOPT-based analytically calculated edges')
             plt.axvline(velocity[vels[1]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count))
-            color_count += 1
         
         plt.legend()
         plt.show()
