@@ -39,12 +39,12 @@ def find_edges(velocity: ArrayLike, flux: ArrayLike, v0: float, max_bins: int = 
     high_vel = cen_vel + 100
 
     for i in np.arange(low_vel, cen_vel - max_bins)[::-1]:
-        if all(x <= (rms * 1.5) for x in flux[i: i + max_bins - 1]):
+        if all(x <= (rms * 2) for x in flux[i: i + max_bins - 1]):
             low_edge = i + max_bins - 1
             break
     
     for i in np.arange(cen_vel + max_bins, high_vel):
-        if all(x <= (rms * 1.5) for x in flux[i - max_bins + 1:i]):
+        if all(x <= (rms * 2) for x in flux[i - max_bins + 1:i]):
             high_edge = i - max_bins + 1
             break
     
