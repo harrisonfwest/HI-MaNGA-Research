@@ -48,12 +48,6 @@ def find_edges(velocity: ArrayLike, flux: ArrayLike, v0: float, max_bins: int = 
             high_edge = i - max_bins + 1
             break
     
-    # If either a low or high edges fails to be found, choose 100 indices from central velocity as the edge
-    if low_edge == None:
-        low_edge = low_vel
-    if high_edge == None:
-        high_edge = high_vel
-    
     res = [low_edge, high_edge]
     
     return res
@@ -109,7 +103,7 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
     # velocity_index_pairs now ordered as follows:
     # [VHI based WM50 indices], [VHI based WP50 indices], [VHI based WP20 indices], [VHI based W2P50 indices], [VHI based WF50 indices], [VHI based analytical indices]
     # ... [VOPT based WM50 indices], [VOPT based WP50 indices], [VOPT based WP20 indices], [VOPT based W2P50 indices], [VOPT based WF50 indices], [VOPT based analytical indices]
-    
+
     # for v0 in v0_arr:
     c = 0
     for vel_pair in velocity_index_pairs:
@@ -165,18 +159,18 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
             if not any(x == None for x in vels):
                 plt.axvline(velocity[vels[0]], linestyle = 'dashdot', lw = 1, color = 'C' + str(color_count), label = 'VHI-based ' + width_name + ' edges')
                 plt.axvline(velocity[vels[1]], linestyle = 'dashdot', lw = 1, color = 'C' + str(color_count))
-                color_count += 1
+            color_count += 1
         for vels, width_name in zip(velocity_index_pairs[6:11], width_names):
             if not any(x == None for x in vels):
                 plt.axvline(velocity[vels[0]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count), label = 'VOPT-based ' + width_name + ' edges')
                 plt.axvline(velocity[vels[1]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count))
-                color_count += 1
+            color_count += 1
         
         if not any(x == None for x in velocity_index_pairs[5]):
             vels = velocity_index_pairs[5]
             plt.axvline(velocity[vels[0]], linestyle = 'dashdot', lw = 1, color = 'C' + str(color_count), label = 'VHI-based analytically calculated edges')
             plt.axvline(velocity[vels[1]], linestyle = 'dashdot', lw = 1, color = 'C' + str(color_count))
-            color_count += 1
+        color_count += 1
         
         if not any(x == None for x in velocity_index_pairs[11]):
             vels = velocity_index_pairs[11]
