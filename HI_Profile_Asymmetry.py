@@ -145,7 +145,7 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
     width_names = ['WM50', 'WP50', 'WP20', 'W2P50', 'WF50']
     
     # Debug: 
-    print(widths)
+    # print(widths)
     # print(width_names)
     
     if plot:
