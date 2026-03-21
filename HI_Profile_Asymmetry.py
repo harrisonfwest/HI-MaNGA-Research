@@ -132,8 +132,10 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
     
         
     res = [plateIFU, v0_arr]
-    res.append(velocity_index_pairs)
-    res.append(flux_pairs)
+    # res.append(velocity_index_pairs)
+    res += velocity_index_pairs
+    # res.append(flux_pairs)
+    res += flux_pairs
     
     # width_names = ['WM50', 'WP50', 'WP20', 'W2P50', 'WF50', 'analytically calculated']
     width_names = ['WM50', 'WP50', 'WP20', 'W2P50', 'WF50']
