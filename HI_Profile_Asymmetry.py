@@ -52,7 +52,7 @@ def find_edges(velocity: ArrayLike, flux: ArrayLike, v0: float, max_bins: int = 
     
     return res
 
-def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: float, VOPT: float, widths: ArrayLike, MA: bool, plot: bool = False) -> ArrayLike:
+def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: float, VOPT: float, widths: ArrayLike, MA: bool, row_ind: int, LOGMSTARS: float, LOGMHI: float, HI_is_lim: bool, plot: bool = False) -> ArrayLike:
     """ Function to calculate relative integrated fluxes about central velocity of galaxy from global HI profile. Preserves and returns input parameters and their derived values.
 
     Args:
@@ -131,13 +131,14 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         flux_pairs.append([lo_flux, hi_flux])
     
         
-    res = [plateIFU, v0_arr]
+    res = [row_ind, plateIFU, v0_arr]
     # res.append(velocity_index_pairs)
     res += velocity_index_pairs
     # res.append(flux_pairs)
     res += flux_pairs
     res += [MA]
-    
+    res += [LOGMSTARS, LOGMHI, HI_is_lim]
+        
     # width_names = ['WM50', 'WP50', 'WP20', 'W2P50', 'WF50', 'analytically calculated']
     width_names = ['WM50', 'WP50', 'WP20', 'W2P50', 'WF50']
     
