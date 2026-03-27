@@ -22,7 +22,7 @@ def find_edges(velocity: ArrayLike, flux: ArrayLike, v0: float, max_bins: int = 
         max_bins (int, optional): Number of consecutive points required to be within the noise threshold to define an edge. Defaults to 12.
 
     Returns:
-        ArrayLike: Returns a two-element array of low and high velocity side edge indices corresponding indices along the velocity axis.
+        ArrayLike: Returns a two-element array of low and high indices corresponding to analytically calculated galaxy edges along the velocity axis
     """
     
     low_edge = None
