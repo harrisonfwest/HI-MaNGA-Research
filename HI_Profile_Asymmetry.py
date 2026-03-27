@@ -71,18 +71,11 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         Edge index and flux pairs are ordered as follows: VHI-WM50, VHI-WP50, VHI-WP20, VHI-W2P50, VHI-WF50, VHI-calculated,
         VOPT-WM50, VOPT-WP50, VOPT-WP20, VOPT-W2P50, VOPT-WF50, VOPT-calculated
     """
-    
-    # Debug:
-    # print(widths)
 
     # Apparently, the direction of the velocity array varies by file. Must make sure it's uniform to correctly analyze
     if velocity[0] > velocity[1]:
         velocity = velocity[::-1]
         flux = flux[::-1]
-    
-    # Debug: 
-    # print(velocity)
-    # print(flux)
     
     v0_arr = [VHI, VOPT]
     
@@ -100,11 +93,12 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
             velocity_index_pairs.append(arr)
         velocity_index_pairs.append(find_edges(velocity, flux, v0))
     
-    # velocity_index_pairs now ordered as follows:
-    # [VHI based WM50 indices], [VHI based WP50 indices], [VHI based WP20 indices], [VHI based W2P50 indices], [VHI based WF50 indices], [VHI based analytical indices]
-    # ... [VOPT based WM50 indices], [VOPT based WP50 indices], [VOPT based WP20 indices], [VOPT based W2P50 indices], [VOPT based WF50 indices], [VOPT based analytical indices]
+    '''
+    velocity_index_pairs are ordered as follows:
+    [VHI based WM50 indices], [VHI based WP50 indices], [VHI based WP20 indices], [VHI based W2P50 indices], [VHI based WF50 indices], [VHI based analytical indices]
+    ... [VOPT based WM50 indices], [VOPT based WP50 indices], [VOPT based WP20 indices], [VOPT based W2P50 indices], [VOPT based WF50 indices], [VOPT based analytical indices]
+    '''
 
-    # for v0 in v0_arr:
     c = 0
     for vel_pair in velocity_index_pairs:
         if any(x == None for x in vel_pair):
@@ -118,10 +112,6 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         else:
             cen_vel = np.argwhere(velocity == find_nearest(velocity, VOPT))[0, 0]
         
-                
-        # Debug:
-        # print('Integrating from index ', vel_pair[0], ' to ', cen_vel, ' and from ', cen_vel + 1, ' to ', vel_pair[1])
-        
         lo_sel = np.arange(vel_pair[0], cen_vel)
         hi_sel = np.arange(cen_vel + 1, vel_pair[1])
         
@@ -132,26 +122,16 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
     
         
     res = [row_ind, plateIFU, v0_arr]
-    # res.append(velocity_index_pairs)
     res += velocity_index_pairs
-    # res.append(flux_pairs)
     res += flux_pairs
-    res += [MA]
-    res += [LOGMSTARS, LOGMHI, HI_is_lim]
+    res += [MA, LOGMSTARS, LOGMHI, HI_is_lim]
         
-    # width_names = ['WM50', 'WP50', 'WP20', 'W2P50', 'WF50', 'analytically calculated']
     width_names = ['WM50', 'WP50', 'WP20', 'W2P50', 'WF50']
-    
-    # Debug: 
-    # print(widths)
-    # print(width_names)
-    
     
     if plot:
         color_count = 1
         plt.figure(figsize= (10, 8), dpi= 500)
         plt.plot(velocity, flux, color = 'black')
-        # plt.axhline(0, c='gray', lw = 2)
         
         plt.title('Global HI profile of Plate-IFU: ' + plateIFU)
         plt.xlabel(r'Velocity [km s$^{-1}$]')
@@ -183,7 +163,6 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
             plt.axvline(velocity[vels[1]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count))
         
         plt.legend()
-        
         plt.show()
     
     return res
