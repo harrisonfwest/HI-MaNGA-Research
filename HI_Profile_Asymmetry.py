@@ -91,7 +91,10 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
                 hi_vel_index = np.argwhere(velocity == find_nearest(velocity, round(v0 + w)))[0, 0]
                 arr = [lo_vel_index, hi_vel_index]
             velocity_index_pairs.append(arr)
-        velocity_index_pairs.append(find_edges(velocity, flux, v0))
+        edges = find_edges(velocity, flux, v0)
+        velocity_index_pairs.append(edges)
+        if edges[0] == None or edges[1] == None:
+            print('Failed to find edges for IFU', plateIFU, ', which has MA flag', MA)
     
     '''
     velocity_index_pairs are ordered as follows:
