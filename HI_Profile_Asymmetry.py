@@ -94,7 +94,7 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         edges = find_edges(velocity, flux, v0)
         velocity_index_pairs.append(edges)
         if edges[0] == None or edges[1] == None:
-            print('Failed to find edges for IFU', plateIFU, ', which has MA flag', MA)
+            print('Failed to find edges for IFU ' + str(plateIFU) + ', which has MA flag ' + str(MA))
     
     '''
     velocity_index_pairs are ordered as follows:
