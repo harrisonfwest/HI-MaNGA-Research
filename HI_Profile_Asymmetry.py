@@ -5,11 +5,6 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 from scipy.integrate import trapezoid
 
-def find_nearest(array, value):
-    array = np.asarray(array)
-    idx = (np.abs(array - value)).argmin()
-    return array[idx]
-
 def find_edges(velocity: ArrayLike, flux: ArrayLike, v0: float, max_bins: int = 12) -> ArrayLike:
     """
     Algorithm to find edges of 1D spectrum (i.e. flux over a range of velocities) by detecting where the spectrum is reduced to noise
@@ -28,7 +23,7 @@ def find_edges(velocity: ArrayLike, flux: ArrayLike, v0: float, max_bins: int = 
     low_edge = None
     high_edge = None
     
-    cen_vel = np.argwhere(velocity == find_nearest(velocity, v0))[0, 0] # Index of velocity closest to v0
+    cen_vel = np.argmin(np.abs(velocity - v0))
     
     low_rms_sel = np.arange(20, cen_vel - 100)
     hi_rms_sel = np.arange(cen_vel + 100, len(velocity) - 20)
@@ -84,11 +79,11 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
     
     for v0 in v0_arr:
         for w in widths:
-            if w == -999.0:
+            if w == -999:
                 arr = [None, None]
             else:
-                lo_vel_index = np.argwhere(velocity == find_nearest(velocity, round(v0 - w)))[0, 0]
-                hi_vel_index = np.argwhere(velocity == find_nearest(velocity, round(v0 + w)))[0, 0]
+                lo_vel_index = np.argmin(np.abs(velocity - (v0 - w)))
+                hi_vel_index = np.argmin(np.abs(velocity - (v0 + w)))
                 arr = [lo_vel_index, hi_vel_index]
             velocity_index_pairs.append(arr)
         edges = find_edges(velocity, flux, v0)
@@ -110,10 +105,10 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
             continue
         
         if c <= 5:
-            cen_vel = np.argwhere(velocity == find_nearest(velocity, VHI))[0, 0]
+            cen_vel = np.argmin(np.abs(velocity - VHI))
             c += 1
         else:
-            cen_vel = np.argwhere(velocity == find_nearest(velocity, VOPT))[0, 0]
+            cen_vel = np.argmin(np.abs(velocity - VOPT))
         
         lo_sel = np.arange(vel_pair[0], cen_vel)
         hi_sel = np.arange(cen_vel + 1, vel_pair[1])
