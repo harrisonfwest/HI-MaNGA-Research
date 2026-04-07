@@ -12,12 +12,12 @@ relatively abundant data for the HI concentrations of galaxies up to significant
 More information about the MaNGA (Mapping Nearby Galaxies at Apache Point Observatory) survey, part of the Sloan Digital
 Sky Survey, can be found on the [MaNGA section of the SDSS website](https://www.sdss4.org/surveys/manga/).
 
-My code can be found in the `S26_Thesis-Code.ipynb` Jupyter Notebook. The galaxy spectra can be found in the `Spectra` folder. The `Data` directory folder contains many iterations of my cross-matched galaxy data,
-though the most current version is `HIMaNGADR4Cross_sampgalMA.fits`.
-
 The counter rotating galaxy data is from [Zhou et. al (2022)](https://ui.adsabs.harvard.edu/abs/2022MNRAS.515.5081Z/abstract). Using the [TOPCAT software](https://www.star.bris.ac.uk/~mbt/topcat/), I combined the
 misaligned galaxies from the counter-rotating data, the original HI-MaNGA DR4 data, and [Pipe3D](https://www.sdss4.org/dr17/manga/manga-data/manga-pipe3d-value-added-catalog/)
 data files, matching their MaNGA IDs.
+
+My code can be found in the `S26_Thesis-Code.ipynb` Jupyter Notebook. The galaxy spectra can be found in the `Spectra` folder. The `Data` directory folder contains many iterations of my cross-matched galaxy data,
+though the most current version is `HIMaNGADR4Cross_sampgalMA.fits`. The file `HI_Profile_Asymmetry.py` is a script I wrote to analyze galaxy spectra, analytically determining where the edges of the galaxy are along the velocity axis. This is essentially a generic one-dimensional edge-detection script.
 
 The survival analysis code used (`survival_analysis.py`) is from [the repository of David Stark](https://github.com/dvstark/survival) 
 at the Space Telescope Science Institute (STScI). My repository contains an example of this code's usage: the code
