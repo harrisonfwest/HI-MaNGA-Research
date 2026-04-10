@@ -22,6 +22,6 @@ though the most current version is `HIMaNGADR4Cross_sampgalMA.fits`. The file `H
 The survival analysis code used (`survival_analysis.py`) is from [the repository of David Stark](https://github.com/dvstark/survival) 
 at the Space Telescope Science Institute (STScI). My repository contains an example of this code's usage: the code
 has been copied and slightly modified in the notebook `survival_analysis_example.ipynb` before being implemented into 
-the main Jupyter Notebook (`HI-MaNGA_MIsalignmentAndDeficiency.ipynb`). Many thanks to David Stark for providing this 
+the main Jupyter Notebook (`S26_Thesis-Code.ipynb`). Many thanks to David Stark for providing this 
 code, which wraps survival analysis methods from the R Statistical Software into Python, and to my Undergraduate PI 
 Karen Masters for referring me to David's repository as well as for her broader research guidance.
