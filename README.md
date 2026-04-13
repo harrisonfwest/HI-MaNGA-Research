@@ -17,11 +17,11 @@ misaligned galaxies from the counter-rotating data, the original HI-MaNGA DR4 da
 data files, matching their MaNGA IDs.
 
 My code can be found in the `S26_Thesis-Code.ipynb` Jupyter Notebook. The galaxy spectra can be found in the `Spectra` folder. The `Data` directory folder contains many iterations of my cross-matched galaxy data,
-though the most current version is `HIMaNGADR4Cross_sampgalMA.fits`. The file `HI_Profile_Asymmetry.py` is a script I wrote to analyze galaxy spectra, analytically determining where the edges of the galaxy are along the velocity axis. This is essentially a generic one-dimensional edge-detection script.
+though the most current version is `HIMaNGADR4Cross_sampgalMA.fits`. The file `HI_Profile_Asymmetry.py` is a script I wrote to analyze galaxy spectra, analytically determining where the edges of the galaxy are along the velocity axis. This is essentially a generic one-dimensional edge-detection script combined with a function to integrate the flux within given edges.
 
 The survival analysis code used (`survival_analysis.py`) is from [the repository of David Stark](https://github.com/dvstark/survival) 
 at the Space Telescope Science Institute (STScI). My repository contains an example of this code's usage: the code
 has been copied and slightly modified in the notebook `survival_analysis_example.ipynb` before being implemented into 
-the main Jupyter Notebook (`HI-MaNGA_MIsalignmentAndDeficiency.ipynb`). Many thanks to David Stark for providing this 
+the main Jupyter Notebook (`S26_Thesis-Code.ipynb`). Many thanks to David Stark for providing this 
 code, which wraps survival analysis methods from the R Statistical Software into Python, and to my Undergraduate PI 
 Karen Masters for referring me to David's repository as well as for her broader research guidance.
