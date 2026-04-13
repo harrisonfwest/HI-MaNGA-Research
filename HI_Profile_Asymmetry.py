@@ -160,6 +160,7 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
             plt.axvline(velocity[vels[0]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count), label = 'VOPT-based analytically calculated edges')
             plt.axvline(velocity[vels[1]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count))
         
+        # plt.xlim(7000, 9000)
         plt.legend()
         plt.show()
     
