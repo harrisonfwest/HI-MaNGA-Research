@@ -151,14 +151,14 @@ def spectrum_analysis(plateIFU: str, velocity: ArrayLike, flux: ArrayLike, VHI: 
         
         if not any(x == None for x in velocity_index_pairs[5]):
             vels = velocity_index_pairs[5]
-            plt.axvline(velocity[vels[0]], linestyle = 'dashdot', lw = 1, color = 'C' + str(color_count), label = 'VHI-based analytically calculated edges')
-            plt.axvline(velocity[vels[1]], linestyle = 'dashdot', lw = 1, color = 'C' + str(color_count))
+            plt.axvline(velocity[vels[0]], lw = 2, color = 'C' + str(color_count), label = 'VHI-based analytically calculated edges')
+            plt.axvline(velocity[vels[1]], lw = 2, color = 'C' + str(color_count))
         color_count += 1
         
         if not any(x == None for x in velocity_index_pairs[11]):
             vels = velocity_index_pairs[11]
-            plt.axvline(velocity[vels[0]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count), label = 'VOPT-based analytically calculated edges')
-            plt.axvline(velocity[vels[1]], linestyle = 'dotted', lw = 1, color = 'C' + str(color_count))
+            plt.axvline(velocity[vels[0]], linestyle= 'dotted', lw = 2, color = 'C' + str(color_count), label = 'VOPT-based analytically calculated edges')
+            plt.axvline(velocity[vels[1]], linestyle= 'dotted', lw = 2, color = 'C' + str(color_count))
         
         # plt.xlim(7000, 9000)
         plt.legend()
